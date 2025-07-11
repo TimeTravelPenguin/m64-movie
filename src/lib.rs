@@ -1,4 +1,7 @@
-use bilge::prelude::*;
+use bilge::{
+    Bitsized,
+    prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7},
+};
 use binrw::{BinRead, BinWrite, NullString, helpers::until_eof};
 
 /// Validate a non-zero value that is only considered valid if
