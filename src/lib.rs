@@ -11,7 +11,6 @@ fn valid_only_if_ext_version_eq(extended_version: u8, valid_versions: &[u8], val
     valid_versions.contains(&extended_version) || value.iter().all(&|&b| b == 0)
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[brw(little, magic = b"M64\x1A")]
 #[brw(
