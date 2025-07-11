@@ -1,0 +1,16 @@
+[package]
+name = "m64-movie"
+authors = ["Phillip Smith <TimeTravelPenguin@gmail.com>"]
+version = "0.0.1"
+edition = "2024"
+include = ["src/lib.rs", "LICENSE", "README.md"]
+description = "A library for reading and writing M64 movie files."
+license = "MIT"
+repository = "https://github.com/TimeTravelPenguin/m64-movie"
+readme = "README.md"
+keywords = ["mupen64", "TAS", "parser", "m64"]
+categories = ["parsing"]
+
+[dependencies]
+bilge = "0.2.0"
+binrw = "0.15.0"
