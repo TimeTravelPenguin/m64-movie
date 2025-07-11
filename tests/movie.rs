@@ -1,4 +1,4 @@
-use m64_movie::movie::{ButtonState, Movie};
+use m64_movie::{ButtonState, Movie};
 
 static MOVIE_BYTES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
