@@ -25,4 +25,5 @@ let movie = Movie::from_bytes(&bytes).expect("Failed to parse movie");
 println!("Author: {:?}", movie.author_name);
 ```
 
-Refer to [`Movie`] for additional information.
+Refer to [`Movie`](https://docs.rs/m64-movie/latest/m64_movie/struct.Movie.html)
+for additional information.
