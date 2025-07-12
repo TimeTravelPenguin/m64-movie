@@ -120,6 +120,15 @@ impl Movie {
         self.write(&mut cursor)?;
         Ok(cursor.into_inner())
     }
+
+    /// Returns the controller input data, grouped by the number of controllers.
+    /// Note that the index of input for each controller is determined by the game.
+    pub fn inputs_grouped(&self) -> Vec<Vec<ControllerState>> {
+        self.inputs
+            .chunks(self.controller_count as usize)
+            .map(|chunk| chunk.to_vec())
+            .collect()
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
@@ -285,6 +294,16 @@ impl ControllerState {
         self.set__y_axis(value as u8);
     }
 
+    /// Returns a tuple of the x and y axis values.
+    pub fn axis(&self) -> (i8, i8) {
+        (self.x_axis(), self.y_axis())
+    }
+
+    /// Set the analog x and y axis values.
+    pub fn set_axis(&mut self, x: i8, y: i8) {
+        self.set_x_axis(x);
+        self.set_y_axis(y);
+    }
     /// Set a button as pressed.
     pub fn set(&mut self, button: ControllerButton) {
         match button {
