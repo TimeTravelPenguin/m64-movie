@@ -69,8 +69,8 @@ pub struct Movie {
         assert(rom_name.is_ascii(), "ROM name must be ASCII")
     )]
     pub rom_name: NullString, // 0x0C4
-    pub rom_crc: u32,             // 0x0E4
     pub rom_country: u16,         // 0x0E8
+    pub rom_crc32: u32, // 0x0E4
     pub reserved03: Reserved<56>, // 0x0EA
 
     #[brw(
