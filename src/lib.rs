@@ -165,12 +165,20 @@ pub struct Movie {
     pub inputs: Vec<ControllerState>, // 0x400
 }
 
+impl TryFrom<&[u8]> for Movie {
+    type Error = binrw::Error;
+
+    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        let mut cursor = std::io::Cursor::new(bytes);
+        Movie::read(&mut cursor)
+    }
+}
+
 impl Movie {
     /// Parses a Mupen64 movie from a byte slice.
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, binrw::Error> {
-        let mut cursor = std::io::Cursor::new(bytes);
-        let raw_movie: Movie = Movie::read(&mut cursor)?;
-        Ok(raw_movie)
+    pub fn from_bytes(bytes: &[u8]) -> BinResult<Self> {
+        Movie::try_from(bytes)
+    }
     }
 
     /// Writes the Mupen64 movie to bytes.
