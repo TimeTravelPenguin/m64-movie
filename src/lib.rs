@@ -1,6 +1,6 @@
 use bilge::{
     Bitsized,
-    prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7},
+    prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7, u20},
 };
 use binrw::{BinRead, BinWrite, NullString, helpers::until_eof};
 
@@ -60,8 +60,7 @@ pub struct Movie {
     pub input_samples: u32,            // 0x018
     pub start_type: MovieStartType,    // 0x01C
     pub reserved01: Reserved<2>,       // 0x01E
-    // TODO: Create ControllerFlags struct
-    pub controller_flags: u32,       // 0x020
+    pub controller_flags: ControllerFlags, // 0x020
     pub extended_data: ExtendedData, // 0x024
     pub reserved02: Reserved<128>,   // 0x044
 
@@ -137,12 +136,61 @@ pub struct ExtendedFlags {
     pub reserved: u7,
 }
 
+/// A 4-byte structure for controller flags found at offset 0x020 in the Mupen64 movie header.
+#[bitsize(32)]
+#[derive(FromBits, DefaultBits, DebugBits, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
+#[br(little, map = |raw: u32| Self::from(raw))]
+#[bw(little, map = |s: &Self| s.value)]
+pub struct ControllerFlags {
+    /// Controller 01 present flag.
+    pub controller_01_present: bool,
+    /// Controller 02 present flag.
+    pub controller_02_present: bool,
+    /// Controller 03 present flag.
+    pub controller_03_present: bool,
+    /// Controller 04 present flag.
+    pub controller_04_present: bool,
+    /// Controller 01 memory pack flag.
+    pub controller_01_has_mempak: bool,
+    /// Controller 02 memory pack flag.
+    pub controller_02_has_mempak: bool,
+    /// Controller 03 memory pack flag.
+    pub controller_03_has_mempak: bool,
+    /// Controller 04 memory pack flag.
+    pub controller_04_has_mempak: bool,
+    /// Controller 01 rumble pack flag.
+    pub controller_01_has_rumblepak: bool,
+    /// Controller 02 rumble pack flag.
+    pub controller_02_has_rumblepak: bool,
+    /// Controller 03 rumble pack flag.
+    pub controller_03_has_rumblepak: bool,
+    /// Controller 04 rumble pack flag.
+    pub controller_04_has_rumblepak: bool,
+    /// Remaining reserved space.
+    pub reserved: u20,
+}
+
+impl ControllerFlags {
+    /// Returns the number of controllers present in the movie.
+    pub fn num_controllers_present(&self) -> u8 {
+        self.controller_01_present() as u8
+            + self.controller_02_present() as u8
+            + self.controller_03_present() as u8
+            + self.controller_04_present() as u8
+    }
+}
+
+/// A 32-byte structure for extended data found at offset 0x024 in the Mupen64 movie header.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[brw(little)]
 pub struct ExtendedData {
+    /// Special authorship information.
     pub authorship_info: u32,
+    /// Data regarding bruteforcing.
     pub bruteforce_data: u32,
+    /// The high word of the rerecord count.
     pub rerecord_count_high: u32,
+    /// The remaining reserved space.
     pub reserved: Reserved<20>,
 }
 
