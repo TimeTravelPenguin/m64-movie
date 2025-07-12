@@ -1,5 +1,7 @@
 #![doc = include_str!("../README.md")]
 
+use std::fmt::{self, Debug};
+
 use bilge::{
     Bitsized,
     prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7, u20},
@@ -189,10 +191,16 @@ impl Movie {
 }
 
 /// A struct implementing `BinRead` and `BinWrite` for reserved space in bytes.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
+#[derive(Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 pub struct Reserved<const T: usize> {
     /// A span of `T` reserved bytes.
     pub reserved: [u8; T],
+}
+
+impl<const T: usize> Debug for Reserved<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Reserved({} bytes)", T)
+    }
 }
 
 /// A 1-byte structure for extended flags found at offset 0x017 in the Mupen64 movie header.
