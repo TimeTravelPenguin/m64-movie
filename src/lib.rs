@@ -206,6 +206,43 @@ pub enum MovieStartType {
     EEPROM,
 }
 
+/// An enum representing the buttons on a Mupen64 controller.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum ControllerButton {
+    /// The right directional pad button.
+    DPadRight,
+    /// The left directional pad button.
+    DPadLeft,
+    /// The down directional pad button.
+    DPadDown,
+    /// The up directional pad button.
+    DPadUp,
+    /// The start button.
+    Start,
+    /// The Z button.
+    Z,
+    /// The B button.
+    B,
+    /// The A button.
+    A,
+    /// The C-right button.
+    CRight,
+    /// The C-left button.
+    CLeft,
+    /// The C-down button.
+    CDown,
+    /// The C-up button.
+    CUp,
+    /// The right trigger button.
+    TriggerRight,
+    /// The left trigger button.
+    TriggerLeft,
+    /// Reserved button 01.
+    Reserved01,
+    /// Reserved button 02.
+    Reserved02,
+}
+
 #[bitsize(32)]
 #[derive(FromBits, DefaultBits, DebugBits, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[br(little, map = |raw: u32| Self::from(raw))]
@@ -246,5 +283,107 @@ impl ButtonState {
 
     pub fn set_y_axis(&mut self, value: i8) {
         self.set__y_axis(value as u8);
+    }
+
+    /// Set a button as pressed.
+    pub fn set(&mut self, button: ControllerButton) {
+        match button {
+            ControllerButton::DPadRight => self.set_dpad_right(true),
+            ControllerButton::DPadLeft => self.set_dpad_left(true),
+            ControllerButton::DPadDown => self.set_dpad_down(true),
+            ControllerButton::DPadUp => self.set_dpad_up(true),
+            ControllerButton::Start => self.set_start_btn(true),
+            ControllerButton::Z => self.set_z_btn(true),
+            ControllerButton::B => self.set_b_btn(true),
+            ControllerButton::A => self.set_a_btn(true),
+            ControllerButton::CRight => self.set_c_right(true),
+            ControllerButton::CLeft => self.set_c_left(true),
+            ControllerButton::CDown => self.set_c_down(true),
+            ControllerButton::CUp => self.set_c_up(true),
+            ControllerButton::TriggerRight => self.set_trigger_right(true),
+            ControllerButton::TriggerLeft => self.set_trigger_left(true),
+            ControllerButton::Reserved01 => self.set_reserved01(true),
+            ControllerButton::Reserved02 => self.set_reserved02(true),
+        }
+    }
+
+    /// Set a button as not pressed.
+    pub fn unset(&mut self, button: ControllerButton) {
+        match button {
+            ControllerButton::DPadRight => self.set_dpad_right(false),
+            ControllerButton::DPadLeft => self.set_dpad_left(false),
+            ControllerButton::DPadDown => self.set_dpad_down(false),
+            ControllerButton::DPadUp => self.set_dpad_up(false),
+            ControllerButton::Start => self.set_start_btn(false),
+            ControllerButton::Z => self.set_z_btn(false),
+            ControllerButton::B => self.set_b_btn(false),
+            ControllerButton::A => self.set_a_btn(false),
+            ControllerButton::CRight => self.set_c_right(false),
+            ControllerButton::CLeft => self.set_c_left(false),
+            ControllerButton::CDown => self.set_c_down(false),
+            ControllerButton::CUp => self.set_c_up(false),
+            ControllerButton::TriggerRight => self.set_trigger_right(false),
+            ControllerButton::TriggerLeft => self.set_trigger_left(false),
+            ControllerButton::Reserved01 => self.set_reserved01(false),
+            ControllerButton::Reserved02 => self.set_reserved02(false),
+        }
+    }
+
+    /// Return whether a button is pressed.
+    pub fn is_set(&self, button: ControllerButton) -> bool {
+        match button {
+            ControllerButton::DPadRight => self.dpad_right(),
+            ControllerButton::DPadLeft => self.dpad_left(),
+            ControllerButton::DPadDown => self.dpad_down(),
+            ControllerButton::DPadUp => self.dpad_up(),
+            ControllerButton::Start => self.start_btn(),
+            ControllerButton::Z => self.z_btn(),
+            ControllerButton::B => self.b_btn(),
+            ControllerButton::A => self.a_btn(),
+            ControllerButton::CRight => self.c_right(),
+            ControllerButton::CLeft => self.c_left(),
+            ControllerButton::CDown => self.c_down(),
+            ControllerButton::CUp => self.c_up(),
+            ControllerButton::TriggerRight => self.trigger_right(),
+            ControllerButton::TriggerLeft => self.trigger_left(),
+            ControllerButton::Reserved01 => self.reserved01(),
+            ControllerButton::Reserved02 => self.reserved02(),
+        }
+    }
+
+    /// Toggle whether a button is pressed.
+    pub fn toggle(&mut self, button: ControllerButton) {
+        if self.is_set(button) {
+            self.unset(button);
+        } else {
+            self.set(button);
+        }
+    }
+
+    /// Get a vector of all buttons that are currently pressed.
+    pub fn get_pressed(&self) -> Vec<ControllerButton> {
+        let buttons = [
+            ControllerButton::DPadRight,
+            ControllerButton::DPadLeft,
+            ControllerButton::DPadDown,
+            ControllerButton::DPadUp,
+            ControllerButton::Start,
+            ControllerButton::Z,
+            ControllerButton::B,
+            ControllerButton::A,
+            ControllerButton::CRight,
+            ControllerButton::CLeft,
+            ControllerButton::CDown,
+            ControllerButton::CUp,
+            ControllerButton::TriggerRight,
+            ControllerButton::TriggerLeft,
+            ControllerButton::Reserved01,
+            ControllerButton::Reserved02,
+        ];
+
+        buttons
+            .into_iter()
+            .filter(|&button| self.is_set(button))
+            .collect()
     }
 }
