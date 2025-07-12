@@ -7,6 +7,7 @@ include = ["src/lib.rs", "LICENSE", "README.md"]
 description = "A library for reading and writing M64 movie files."
 license = "MIT"
 repository = "https://github.com/TimeTravelPenguin/m64-movie"
+documentation = "https://docs.rs/m64-movie"
 readme = "README.md"
 keywords = ["mupen64", "TAS", "parser", "m64"]
 categories = ["parsing"]
