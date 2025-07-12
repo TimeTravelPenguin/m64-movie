@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use bilge::{
     Bitsized,
     prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7, u20},
@@ -11,6 +13,10 @@ fn valid_only_if_ext_version_eq(extended_version: u8, valid_versions: &[u8], val
     valid_versions.contains(&extended_version) || value.iter().all(&|&b| b == 0)
 }
 
+/// A Mupen64 movie file.
+///
+/// Only version 3 is supported. Please refer to the
+/// [file format documentation](https://tasvideos.org/EmulatorResources/Mupen/M64) for more details.
 #[derive(Debug, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[brw(little, magic = b"M64\x1A")]
 #[brw(
@@ -49,72 +55,123 @@ fn valid_only_if_ext_version_eq(extended_version: u8, valid_versions: &[u8], val
     ),
 )]
 pub struct Movie {
-    pub version: u32,                  // 0x004
-    pub uid: u32,                      // 0x008
-    pub vertical_interrupts: u32,      // 0x00C
-    pub rerecord_count: u32,           // 0x010
-    pub vis_per_second: u8,            // 0x014
-    pub controller_count: u8,          // 0x015
-    pub extended_version: u8,          // 0x016
-    pub extended_flags: ExtendedFlags, // 0x017
-    pub input_samples: u32,            // 0x018
-    pub start_type: MovieStartType,    // 0x01C
-    pub reserved01: Reserved<2>,       // 0x01E
-    pub controller_flags: ControllerFlags, // 0x020
-    pub extended_data: ExtendedData, // 0x024
-    pub reserved02: Reserved<128>,   // 0x044
+    /// The version of the Mupen64 movie format.
+    pub version: u32, // 0x004
 
+    /// The unique identifier for the movie.
+    pub uid: u32, // 0x008
+
+    /// The number of vertical interrupts in the movie.
+    pub vertical_interrupts: u32, // 0x00C
+
+    /// The number of rerecords in the movie.
+    pub rerecord_count: u32, // 0x010
+
+    /// The number of vertical interrupts per second.
+    pub vis_per_second: u8, // 0x014
+
+    /// The number of controllers used in the movie.
+    pub controller_count: u8, // 0x015
+
+    /// The extended version of the movie format. On versions of Mupen64 movies
+    /// created with mupen <1.1.9, this value is always 0.
+    pub extended_version: u8, // 0x016
+
+    /// Extended flags for the movie. This is only valid if the extended version is 1.
+    pub extended_flags: ExtendedFlags, // 0x017
+
+    /// The number of input samples for any controller in the movie.
+    pub controller_input_samples: u32, // 0x018
+
+    /// The start type of the movie, indicating how the movie begins.
+    pub start_type: MovieStartType, // 0x01C
+
+    /// Reserved space.
+    pub reserved01: Reserved<2>, // 0x01E
+
+    /// Flags indicating the presence and capabilities of controllers.
+    pub controller_flags: ControllerFlags, // 0x020
+
+    /// Extended data for the movie, which is only valid if the extended version is non-zero.
+    pub extended_data: ExtendedData, // 0x024
+
+    /// Reserved space.
+    pub reserved02: Reserved<128>, // 0x044
+
+    /// The internal name of the ROM used in the movie. This value is taken
+    /// directly from the ROM.
     #[brw(
         pad_size_to = 32,
         assert(rom_name.is_ascii(), "ROM name must be ASCII")
     )]
     pub rom_name: NullString, // 0x0C4
-    pub rom_country: u16,         // 0x0E8
+
+    /// The CRC32 checksum of the ROM used in the movie. This value is taken
+    /// directly from the ROM.
     pub rom_crc32: u32, // 0x0E4
+
+    /// The country code of the ROM used in the movie. This value is taken
+    /// directly from the ROM.
+    pub rom_country: u16, // 0x0E8
+
+    /// Reserved space.
     pub reserved03: Reserved<56>, // 0x0EA
 
+    /// The name of the video plugin used in the movie. This value is
+    /// taken directly from the plugin.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "Video plugin name must be ASCII")
     )]
     pub video_plugin: NullString, // 0x122
 
+    /// The name of the sound plugin used in the movie. This value is
+    /// taken directly from the plugin.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "Sound plugin name must be ASCII")
     )]
     pub sound_plugin: NullString, // 0x162
 
+    /// The name of the input plugin used in the movie. This value is
+    /// taken directly from the plugin.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "Input plugin name must be ASCII")
     )]
     pub input_plugin: NullString, // 0x1A2
 
+    /// The name of the RSP plugin used in the movie. This value is
+    /// taken directly from the plugin.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "RSP plugin name must be ASCII")
     )]
     pub rsp_plugin: NullString, // 0x1E2
 
+    /// Author name info for the movie.
     #[brw(pad_size_to = 222)]
     pub author_name: NullString, // 0x222
 
+    /// Author description info for the movie.
     #[brw(pad_size_to = 256)]
     pub description: NullString, // 0x300
 
+    /// Controller inputs for the movie.
     #[brw(align_before = 0x400)]
     #[br(parse_with = until_eof)]
     pub inputs: Vec<ControllerState>, // 0x400
 }
 
 impl Movie {
+    /// Parses a Mupen64 movie from a byte slice.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, binrw::Error> {
         let mut cursor = std::io::Cursor::new(bytes);
         let raw_movie: Movie = Movie::read(&mut cursor)?;
         Ok(raw_movie)
     }
 
+    /// Writes the Mupen64 movie to bytes.
     pub fn to_bytes(&self) -> Result<Vec<u8>, binrw::Error> {
         let mut cursor = std::io::Cursor::new(Vec::new());
         self.write(&mut cursor)?;
@@ -131,11 +188,14 @@ impl Movie {
     }
 }
 
+/// A struct implementing `BinRead` and `BinWrite` for reserved space in bytes.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 pub struct Reserved<const T: usize> {
+    /// A span of `T` reserved bytes.
     pub reserved: [u8; T],
 }
 
+/// A 1-byte structure for extended flags found at offset 0x017 in the Mupen64 movie header.
 #[bitsize(8)]
 #[derive(FromBits, DefaultBits, DebugBits, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[br(little, map = |raw: u8| Self::from(raw))]
@@ -203,14 +263,18 @@ pub struct ExtendedData {
     pub reserved: Reserved<20>,
 }
 
+/// An enum representing the start type of a Mupen64 movie.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[brw(little)]
 pub enum MovieStartType {
+    /// The movie starts from a snapshot.
     #[brw(magic = 1u16)]
     Snapshot,
+    /// The movie starts from a power-on state.
     #[brw(magic = 2u16)]
     PowerOn,
+    /// The movie starts from EEPROM.
     #[brw(magic = 4u16)]
     EEPROM,
 }
@@ -252,44 +316,67 @@ pub enum ControllerButton {
     Reserved02,
 }
 
+/// A 4-byte structure representing controller input.
 #[bitsize(32)]
 #[derive(FromBits, DefaultBits, DebugBits, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[br(little, map = |raw: u32| Self::from(raw))]
 #[bw(little, map = |s: &Self| s.value)]
 pub struct ControllerState {
+    /// The right directional pad button.
     pub dpad_right: bool,
+    /// The left directional pad button.
     pub dpad_left: bool,
+    /// The down directional pad button.
     pub dpad_down: bool,
+    /// The up directional pad button.
     pub dpad_up: bool,
+    /// The start button.
     pub start_btn: bool,
+    /// The Z button.
     pub z_btn: bool,
+    /// The B button.
     pub b_btn: bool,
+    /// The A button.
     pub a_btn: bool,
+    /// The C-right button.
     pub c_right: bool,
+    /// The C-left button.
     pub c_left: bool,
+    /// The C-down button.
     pub c_down: bool,
+    /// The C-up button.
     pub c_up: bool,
+    /// The right trigger button.
     pub trigger_right: bool,
+    /// The left trigger button.
     pub trigger_left: bool,
+    /// Reserved button 01.
     pub reserved01: bool,
+    /// Reserved button 02.
     pub reserved02: bool,
+    /// The analog x-axis value, represented as an 8-bit unsigned integer.
     _x_axis: u8,
+    /// The analog y-axis value, represented as an 8-bit unsigned integer.
     _y_axis: u8,
 }
 
 impl ControllerState {
+    /// Get the analog x-axis value.
     pub fn x_axis(&self) -> i8 {
         self._x_axis() as i8
     }
 
+    /// Set the analog x-axis value.
     pub fn set_x_axis(&mut self, value: i8) {
         self.set__x_axis(value as u8);
     }
 
+    /// Get the analog y-axis value.
     pub fn y_axis(&self) -> i8 {
         self._y_axis() as i8
     }
 
+    /// Set the analog y-axis value.
     pub fn set_y_axis(&mut self, value: i8) {
         self.set__y_axis(value as u8);
     }
@@ -304,6 +391,7 @@ impl ControllerState {
         self.set_x_axis(x);
         self.set_y_axis(y);
     }
+
     /// Set a button as pressed.
     pub fn set(&mut self, button: ControllerButton) {
         match button {
