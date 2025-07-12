@@ -1,4 +1,4 @@
-use m64_movie::{ButtonState, Movie};
+use m64_movie::{ControllerState, Movie};
 
 static MOVIE_BYTES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -30,7 +30,7 @@ fn test_parsed_movie_has_same_bytes() {
 #[test]
 fn test_button_state_to_bytes() {
     // DPad makes up the first 4 bits:
-    let mut btn = ButtonState::default();
+    let mut btn = ControllerState::default();
     btn.set_dpad_up(true);
     btn.set_dpad_down(true);
     btn.set_dpad_left(true);
@@ -48,7 +48,7 @@ fn test_button_state_to_bytes() {
 fn test_button_state_from_bytes() {
     // DPad makes up the first 4 bits:
     let bytes: u32 = u32::from_le_bytes([15, 00, 00, 00]);
-    let button_state = ButtonState::from(bytes);
+    let button_state = ControllerState::from(bytes);
 
     assert!(button_state.dpad_right(), "DPad Right should be pressed");
     assert!(button_state.dpad_left(), "DPad Left should be pressed");
