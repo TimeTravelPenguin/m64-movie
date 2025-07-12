@@ -105,7 +105,7 @@ pub struct Movie {
 
     #[brw(align_before = 0x400)]
     #[br(parse_with = until_eof)]
-    pub inputs: Vec<ButtonState>, // 0x400
+    pub inputs: Vec<ControllerState>, // 0x400
 }
 
 impl Movie {
@@ -247,7 +247,7 @@ pub enum ControllerButton {
 #[derive(FromBits, DefaultBits, DebugBits, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[br(little, map = |raw: u32| Self::from(raw))]
 #[bw(little, map = |s: &Self| s.value)]
-pub struct ButtonState {
+pub struct ControllerState {
     pub dpad_right: bool,
     pub dpad_left: bool,
     pub dpad_down: bool,
@@ -268,7 +268,7 @@ pub struct ButtonState {
     _y_axis: u8,
 }
 
-impl ButtonState {
+impl ControllerState {
     pub fn x_axis(&self) -> i8 {
         self._x_axis() as i8
     }
