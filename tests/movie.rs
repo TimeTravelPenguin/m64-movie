@@ -68,7 +68,7 @@ fn test_movie_parsing_basic_properties() {
 #[test]
 fn test_movie_inputs_grouped() {
     let movie = Movie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
-    let grouped = movie.inputs_grouped();
+    let grouped = movie.controller_inputs_stream().collect::<Vec<_>>();
 
     // Should have the correct number of groups
     assert_eq!(
@@ -77,8 +77,8 @@ fn test_movie_inputs_grouped() {
     );
 
     // Each group should have the correct number of controllers
-    for group in &grouped {
-        assert_eq!(group.len(), movie.controller_count as usize);
+    for group in grouped {
+        assert_eq!(group.count(), movie.controller_count as usize);
     }
 }
 

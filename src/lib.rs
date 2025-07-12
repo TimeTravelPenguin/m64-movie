@@ -180,13 +180,17 @@ impl Movie {
         Ok(cursor.into_inner())
     }
 
-    /// Returns the controller input data, grouped by the number of controllers.
-    /// Note that the index of input for each controller is determined by the game.
-    pub fn inputs_grouped(&self) -> Vec<Vec<ControllerState>> {
+    /// Returns an iterator over the controller states. Each iteration yields an iterator
+    /// containing the states of all controllers for that frame.
+    ///
+    /// Note that the index of each controller is determined by the game.
+    /// So, the first controller in a frame may not be "Player 1" in the game.
+    pub fn controller_inputs_stream(
+        &self,
+    ) -> impl Iterator<Item = impl Iterator<Item = &ControllerState>> {
         self.inputs
             .chunks(self.controller_count as usize)
-            .map(|chunk| chunk.to_vec())
-            .collect()
+            .map(move |chunk| chunk.iter())
     }
 }
 

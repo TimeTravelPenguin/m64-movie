@@ -23,8 +23,23 @@ fn main() {
         .position(|input| input.a_btn() && input.b_btn() && input.axis() != (0, 0))
         .unwrap_or(0);
 
+    let controller_inputs = movie
+        .controller_inputs_stream()
+        .enumerate()
+        .skip(first_frame)
+        .take(10);
+
     println!("\nFirst 10 frames from frame {}:", first_frame);
-    for (i, input) in movie.inputs.iter().enumerate().skip(first_frame).take(10) {
-        println!("Frame {}: {:?} {:?}", i, input.get_pressed(), input.axis());
+    for (i, input) in controller_inputs {
+        println!("\nFrame {}:", i);
+
+        for (j, controller) in input.enumerate() {
+            println!(
+                "  Controller {}: {:?} {:?}",
+                j,
+                controller.get_pressed(),
+                controller.axis()
+            );
+        }
     }
 }
