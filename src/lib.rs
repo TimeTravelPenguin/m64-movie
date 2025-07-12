@@ -179,6 +179,11 @@ impl Movie {
     pub fn from_bytes(bytes: &[u8]) -> BinResult<Self> {
         Movie::try_from(bytes)
     }
+
+    /// Reads a Mupen64 movie from a file.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> BinResult<Self> {
+        let mut file = File::open(path)?;
+        Movie::read_le(&mut file)
     }
 
     /// Writes the Mupen64 movie to bytes.
@@ -186,6 +191,13 @@ impl Movie {
         let mut cursor = std::io::Cursor::new(Vec::new());
         self.write(&mut cursor)?;
         Ok(cursor.into_inner())
+    }
+
+    /// Writes the Mupen64 movie to a file. If the file already exists, it will be overwritten.
+    pub fn to_file<P: AsRef<Path>>(&self, path: P) -> BinResult<()> {
+        let mut file = File::create(path)?;
+        self.write(&mut file)?;
+        Ok(())
     }
 
     /// Returns an iterator over the controller states. Each iteration yields an iterator

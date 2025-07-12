@@ -6,10 +6,17 @@ use m64_movie::{
     MovieStartType, Reserved,
 };
 
+static MOVIE_120STAR_PATH: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/movies/120 star tas (2012).m64"
+);
+
 static MOVIE_120STAR_BYTES: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/movies/120 star tas (2012).m64"
 ));
+
+static MOVIE_1KEY_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/movies/1key.m64");
 
 static MOVIE_1KEY_BYTES: &[u8] =
     include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/movies/1key.m64"));
@@ -345,4 +352,24 @@ fn test_movie_roundtrip() {
 
     // The movies should be identical
     assert_eq!(original_movie, roundtrip_movie);
+}
+
+#[test]
+fn test_to_file_matches_input_file() {
+    let input_files = [MOVIE_120STAR_PATH, MOVIE_1KEY_PATH];
+
+    for &file_path in &input_files {
+        let movie = Movie::from_file(file_path).unwrap();
+
+        let temp_file = tempfile::NamedTempFile::new().unwrap();
+        movie.to_file(temp_file.path()).unwrap();
+
+        let written_bytes = std::fs::read(temp_file.path()).unwrap();
+        let original_bytes = std::fs::read(file_path).unwrap();
+
+        assert_eq!(
+            written_bytes, original_bytes,
+            "Written bytes should match original file"
+        );
+    }
 }
