@@ -99,7 +99,7 @@ pub struct Movie {
     pub reserved02: Reserved<128>, // 0x044
 
     /// The internal name of the ROM used in the movie. This value is taken
-    /// directly from the ROM.
+    /// directly from the ROM. Should be a 32-byte ASCII string.
     #[brw(
         pad_size_to = 32,
         assert(rom_name.is_ascii(), "ROM name must be ASCII")
@@ -118,7 +118,7 @@ pub struct Movie {
     pub reserved03: Reserved<56>, // 0x0EA
 
     /// The name of the video plugin used in the movie. This value is
-    /// taken directly from the plugin.
+    /// taken directly from the plugin. Should be a 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "Video plugin name must be ASCII")
@@ -126,7 +126,7 @@ pub struct Movie {
     pub video_plugin: NullString, // 0x122
 
     /// The name of the sound plugin used in the movie. This value is
-    /// taken directly from the plugin.
+    /// taken directly from the plugin. Should be 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "Sound plugin name must be ASCII")
@@ -134,7 +134,7 @@ pub struct Movie {
     pub sound_plugin: NullString, // 0x162
 
     /// The name of the input plugin used in the movie. This value is
-    /// taken directly from the plugin.
+    /// taken directly from the plugin. Should be 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "Input plugin name must be ASCII")
@@ -142,18 +142,18 @@ pub struct Movie {
     pub input_plugin: NullString, // 0x1A2
 
     /// The name of the RSP plugin used in the movie. This value is
-    /// taken directly from the plugin.
+    /// taken directly from the plugin. Should be 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
         assert(rom_name.is_ascii(), "RSP plugin name must be ASCII")
     )]
     pub rsp_plugin: NullString, // 0x1E2
 
-    /// Author name info for the movie.
+    /// Author name info for the movie. Should be 222-byte UTF-8 string.
     #[brw(pad_size_to = 222)]
     pub author_name: NullString, // 0x222
 
-    /// Author description info for the movie.
+    /// Author description info for the movie. Should be 256-byte UTF-8 string.
     #[brw(pad_size_to = 256)]
     pub description: NullString, // 0x300
 
