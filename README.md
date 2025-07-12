@@ -1,7 +1,7 @@
 # m64-movie
 
 [![crates](https://img.shields.io/crates/v/m64-movie.svg)](https://crates.io/crates/m64-movie)
-[![build](https://github.com/timetravelpenguin/m64-movie/actions/workflows/rust.yml/badge.svg)](https://github.com/timetravelpenguin/m64-movie/actions/workflows/rust.yml)
+[![build](https://github.com/timetravelpenguin/m64-movie/actions/workflows/ci.yml/badge.svg)](https://github.com/timetravelpenguin/m64-movie/actions/workflows/ci.yml)
 [![docs.rs](https://docs.rs/m64-movie/badge.svg)](https://docs.rs/m64-movie)
 
 A Rust library for reading and writing [Mupen64](https://github.com/mupen64/mupen64-rr-lua) movie files.
