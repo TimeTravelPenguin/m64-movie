@@ -121,7 +121,7 @@ pub struct Movie {
     /// taken directly from the plugin. Should be a 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
-        assert(rom_name.is_ascii(), "Video plugin name must be ASCII")
+        assert(video_plugin.is_ascii(), "Video plugin name must be ASCII")
     )]
     pub video_plugin: NullString, // 0x122
 
@@ -129,7 +129,7 @@ pub struct Movie {
     /// taken directly from the plugin. Should be 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
-        assert(rom_name.is_ascii(), "Sound plugin name must be ASCII")
+        assert(sound_plugin.is_ascii(), "Sound plugin name must be ASCII")
     )]
     pub sound_plugin: NullString, // 0x162
 
@@ -137,7 +137,7 @@ pub struct Movie {
     /// taken directly from the plugin. Should be 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
-        assert(rom_name.is_ascii(), "Input plugin name must be ASCII")
+        assert(input_plugin.is_ascii(), "Input plugin name must be ASCII")
     )]
     pub input_plugin: NullString, // 0x1A2
 
@@ -145,7 +145,7 @@ pub struct Movie {
     /// taken directly from the plugin. Should be 64-byte ASCII string.
     #[brw(
         pad_size_to = 64,
-        assert(rom_name.is_ascii(), "RSP plugin name must be ASCII")
+        assert(rsp_plugin.is_ascii(), "RSP plugin name must be ASCII")
     )]
     pub rsp_plugin: NullString, // 0x1E2
 
