@@ -1,12 +1,17 @@
 #![doc = include_str!("../README.md")]
 
-use std::fmt::{self, Debug};
+use std::{
+    fmt::{self, Debug},
+    fs::File,
+    io::{Cursor, Read},
+    path::Path,
+};
 
 use bilge::{
     Bitsized,
     prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7, u20},
 };
-use binrw::{BinRead, BinWrite, NullString, helpers::until_eof};
+use binrw::{BinRead, BinResult, BinWrite, NullString, helpers::until_eof};
 
 /// Validate a non-zero value that is only considered valid if
 /// the extended version is a specific value. The result is true if the
@@ -187,8 +192,8 @@ impl Movie {
     }
 
     /// Writes the Mupen64 movie to bytes.
-    pub fn to_bytes(&self) -> Result<Vec<u8>, binrw::Error> {
-        let mut cursor = std::io::Cursor::new(Vec::new());
+    pub fn to_bytes(&self) -> BinResult<Vec<u8>> {
+        let mut cursor = Cursor::new(Vec::new());
         self.write(&mut cursor)?;
         Ok(cursor.into_inner())
     }
