@@ -2,13 +2,13 @@
 //!
 //! See [docs](crate::doc::m64_header) for more details on the Mupen64 movie format.
 
-use std::{fmt::Debug, fs::File, io::Cursor, path::Path};
+use std::{fmt::Debug, io::Cursor};
 
 use bilge::{
     Bitsized,
     prelude::{DebugBits, DefaultBits, FromBits, Number, bitsize, u7, u20},
 };
-use binrw::{BinRead, BinResult, BinWrite, NullString, helpers::until_eof};
+use binrw::{BinRead, BinWrite, NullString, helpers::until_eof};
 
 use crate::shared::Reserved;
 
