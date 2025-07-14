@@ -1,4 +1,4 @@
-use m64_movie::Movie;
+use m64_movie::{BinReadExt, m64::Movie};
 
 static MOVIE_BYTES: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/movies/1key.m64"));
 
