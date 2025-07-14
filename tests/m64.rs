@@ -2,8 +2,12 @@ use std::io::Cursor;
 
 use binrw::{BinWrite, meta::WriteEndian};
 use m64_movie::{
-    ControllerButton, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, Movie,
-    MovieStartType, Reserved,
+    BinReadExt, BinWriteExt,
+    m64::{
+        ControllerButton, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, Movie,
+        MovieStartType,
+    },
+    shared::Reserved,
 };
 
 static MOVIE_120STAR_PATH: &str = concat!(
@@ -372,4 +376,55 @@ fn test_to_file_matches_input_file() {
             "Written bytes should match original file"
         );
     }
+}
+
+#[test]
+fn test_ext_version_cases() -> Result<(), String> {
+    let mut bytes = MOVIE_120STAR_BYTES.to_vec();
+
+    let movie = Movie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
+    assert_eq!(movie.extended_version, 0, "Initial ext_version should be 0");
+
+    // Set the extended version to 1
+    replace_bytes(
+        &mut bytes,
+        0x16, // Offset for extended version
+        &1u8.to_le_bytes(),
+    )?;
+
+    let movie = Movie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
+    assert_eq!(movie.extended_version, 1, "Extended version should be 1");
+
+    // Set the extended flags to enable WiiVC emulation mode.
+    // This should be valid for ext_version 1.
+    let mut ext_flags = ExtendedFlags::default();
+    ext_flags.set_wiivc_emulation_mode(true);
+
+    let ext_flags_bytes = ext_flags
+        .to_bytes()
+        .map_err(|e| format!("Failed to serialize ExtendedFlags: {}", e))?;
+
+    replace_bytes(
+        &mut bytes,
+        0x17, // Offset for extended flags
+        &ext_flags_bytes,
+    )?;
+
+    let movie = Movie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
+    assert_eq!(
+        movie.extended_flags, ext_flags,
+        "Extended flags should match after modification"
+    );
+
+    // Now set the extended version to 0, which should not be valid.
+    replace_bytes(
+        &mut bytes,
+        0x16, // Offset for extended version
+        &0u8.to_le_bytes(),
+    )?;
+
+    let movie = Movie::from_bytes(&bytes);
+    assert!(movie.is_err(), "Movie should not parse with ext_version 1");
+
+    Ok(())
 }

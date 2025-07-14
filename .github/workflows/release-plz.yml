@@ -2,8 +2,10 @@ name: Release-plz
 
 on:
   push:
+    tags:
+      - "*"
     branches:
-      - main
+      - "main"
 
 jobs:
   release-plz-release:
