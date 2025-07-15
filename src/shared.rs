@@ -1,9 +1,6 @@
 //! Shared types and traits for binary reading and writing.
 
-use std::{
-    fmt::{self, Debug, Display},
-    ops::Deref,
-};
+use std::fmt::{self, Debug, Display};
 
 use binrw::{BinRead, BinWrite, NullString};
 use fixedstr::zstr;
@@ -110,6 +107,11 @@ impl<const N: usize> EncodedFixedStr<N> {
         ))
     }
 
+    /// Creates a new `EncodedFixedStr` from a UTF-8 string slice.
+    pub fn from_utf8_str<S: Into<String>>(s: S) -> Result<Self, EncodedFixedStrError> {
+        EncodedFixedStr::from_utf8(s.into().as_bytes())
+    }
+
     /// Creates a new `EncodedFixedStr` from an ASCII string.
     pub fn from_ascii<B: AsRef<[u8]>>(bytes: B) -> Result<Self, EncodedFixedStrError> {
         let s = str::from_utf8(bytes.as_ref())
@@ -123,5 +125,10 @@ impl<const N: usize> EncodedFixedStr<N> {
         Ok(EncodedFixedStr::Ascii(
             FixedStr::new(s).map_err(EncodedFixedStrError::FixedStrError)?,
         ))
+    }
+
+    /// Creates a new `EncodedFixedStr` from an ASCII string slice.
+    pub fn from_ascii_str<S: Into<String>>(s: S) -> Result<Self, EncodedFixedStrError> {
+        Self::from_ascii(s.into().as_bytes())
     }
 }
