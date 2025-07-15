@@ -4,6 +4,7 @@ use binrw::{BinWrite, meta::WriteEndian};
 use m64_movie::{
     BinReadExt, BinWriteExt,
     movie::ControllerButton,
+    parsed::m64::Movie,
     raw::m64::{
         ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
     },
@@ -433,4 +434,87 @@ fn test_ext_version_cases() -> Result<(), String> {
     );
 
     Ok(())
+}
+
+#[test]
+fn test_parsed_from_raw_movie() {
+    let raw_movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let parsed_movie: Movie = raw_movie.clone().try_into().unwrap();
+
+    // Metadata checks
+    assert_eq!(parsed_movie.metadata.version, raw_movie.version);
+    assert_eq!(
+        parsed_movie.metadata.extended_version,
+        raw_movie.extended_version
+    );
+    assert_eq!(
+        parsed_movie.metadata.extended_flags,
+        raw_movie.extended_flags
+    );
+    assert_eq!(parsed_movie.metadata.extended_data, raw_movie.extended_data);
+
+    // Game info checks
+    assert_eq!(
+        parsed_movie.game_info.rom_name.to_string(),
+        raw_movie.rom_name.to_string()
+    );
+    assert_eq!(parsed_movie.game_info.rom_crc32, raw_movie.rom_crc32);
+    assert_eq!(parsed_movie.game_info.rom_country, raw_movie.rom_country);
+
+    // Plugin info checks
+    assert_eq!(
+        parsed_movie.plugin_info.video_plugin.to_string(),
+        raw_movie.video_plugin.to_string()
+    );
+    assert_eq!(
+        parsed_movie.plugin_info.sound_plugin.to_string(),
+        raw_movie.sound_plugin.to_string()
+    );
+    assert_eq!(
+        parsed_movie.plugin_info.input_plugin.to_string(),
+        raw_movie.input_plugin.to_string()
+    );
+    assert_eq!(
+        parsed_movie.plugin_info.rsp_plugin.to_string(),
+        raw_movie.rsp_plugin.to_string()
+    );
+
+    // Recording info checks
+    assert_eq!(
+        parsed_movie.recording_info.author_name.to_string(),
+        raw_movie.author_name.to_string()
+    );
+    assert_eq!(
+        parsed_movie.recording_info.description.to_string(),
+        raw_movie.description.to_string()
+    );
+    assert_eq!(parsed_movie.recording_info.uid, raw_movie.uid);
+    assert_eq!(
+        parsed_movie.recording_info.vertical_interrupts,
+        raw_movie.vertical_interrupts
+    );
+    assert_eq!(
+        parsed_movie.recording_info.rerecord_count,
+        raw_movie.rerecord_count
+    );
+    assert_eq!(
+        parsed_movie.recording_info.vis_per_second,
+        raw_movie.vis_per_second
+    );
+    assert_eq!(
+        parsed_movie.recording_info.controller_count,
+        raw_movie.controller_count
+    );
+    assert_eq!(
+        parsed_movie.recording_info.controller_input_samples,
+        raw_movie.controller_input_samples
+    );
+    assert_eq!(
+        parsed_movie.recording_info.controller_flags,
+        raw_movie.controller_flags
+    );
+    assert_eq!(parsed_movie.recording_info.start_type, raw_movie.start_type);
+
+    // Inputs checks
+    assert_eq!(parsed_movie.inputs, raw_movie.inputs);
 }
