@@ -2,101 +2,48 @@
 
 pub mod doc;
 pub mod movie;
+pub mod parsed;
 pub mod raw;
 pub mod shared;
 
-use std::{fs::File, io::Cursor, path::Path};
+use std::path::Path;
 
-use binrw::{BinRead, BinResult, BinWrite};
+use thiserror::Error;
 
+#[doc(inline)]
+use parsed::m64::Movie;
 #[doc(inline)]
 pub use raw::m64::{
     ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
 };
+
+#[derive(Debug, Error)]
+pub enum MovieError {
+    #[error("Failed to read movie data: {0}")]
+    BinRWError(#[from] binrw::Error),
+    #[error("Failed to read file: {0}")]
+    FileError(#[from] std::io::Error),
+    #[error("Failed to parse string: {0}")]
+    StringError(#[from] shared::EncodedFixedStrError),
+}
 
 /// Extensions for reading binary data.
 pub trait BinReadExt
 where
     Self: Sized,
 {
+    type Error;
     /// Reads the binary data from a byte slice.
-    fn from_bytes(bytes: &[u8]) -> BinResult<Self>;
+    fn from_bytes(bytes: &[u8]) -> Result<Self, Self::Error>;
     /// Reads the binary data from a file.
-    fn from_file<P: AsRef<Path>>(path: P) -> BinResult<Self>;
+    fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, Self::Error>;
 }
 
 /// Extensions for writing binary data.
 pub trait BinWriteExt {
+    type Error;
     /// Converts the instance to a byte vector.
-    fn to_bytes(&self) -> BinResult<Vec<u8>>;
+    fn to_bytes(&self) -> Result<Vec<u8>, Self::Error>;
     /// Writes the instance to a binary file.
-    fn to_file<P: AsRef<Path>>(&self, path: P) -> BinResult<()>;
+    fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), Self::Error>;
 }
-
-macro_rules! impl_bin_read_ext {
-    ($type:ty) => {
-        impl BinReadExt for $type {
-            fn from_bytes(bytes: &[u8]) -> BinResult<Self> {
-                let mut cursor = Cursor::new(bytes);
-                Self::read_le(&mut cursor)
-            }
-
-            fn from_file<P: AsRef<Path>>(path: P) -> BinResult<Self> {
-                let mut file = File::open(path)?;
-                Self::read_le(&mut file)
-            }
-        }
-    };
-}
-
-macro_rules! impl_bin_write_ext {
-    ($type:ty) => {
-        impl BinWriteExt for $type {
-            fn to_bytes(&self) -> BinResult<Vec<u8>> {
-                let mut cursor = Cursor::new(Vec::new());
-                self.write(&mut cursor)?;
-                Ok(cursor.into_inner())
-            }
-
-            fn to_file<P: AsRef<Path>>(&self, path: P) -> BinResult<()> {
-                let mut file = File::create(path)?;
-                self.write(&mut file)?;
-                Ok(())
-            }
-        }
-    };
-}
-
-macro_rules! impl_try_from {
-    ($type:ty) => {
-        impl TryFrom<&[u8]> for $type {
-            type Error = binrw::Error;
-
-            fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-                Self::from_bytes(bytes)
-            }
-        }
-    };
-}
-
-impl_try_from!(RawMovie);
-impl_bin_read_ext!(RawMovie);
-impl_bin_write_ext!(RawMovie);
-
-impl_try_from!(ExtendedFlags);
-impl_bin_read_ext!(ExtendedFlags);
-impl_bin_write_ext!(ExtendedFlags);
-
-impl_bin_read_ext!(MovieStartType);
-impl_bin_write_ext!(MovieStartType);
-
-impl_try_from!(ControllerFlags);
-impl_bin_read_ext!(ControllerFlags);
-impl_bin_write_ext!(ControllerFlags);
-
-impl_bin_read_ext!(ExtendedData);
-impl_bin_write_ext!(ExtendedData);
-
-impl_try_from!(ControllerState);
-impl_bin_read_ext!(ControllerState);
-impl_bin_write_ext!(ControllerState);
