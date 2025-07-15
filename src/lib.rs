@@ -1,7 +1,8 @@
 #![doc = include_str!("../README.md")]
 
 pub mod doc;
-pub mod m64;
+pub mod movie;
+pub mod raw;
 pub mod shared;
 
 use std::{fs::File, io::Cursor, path::Path};
@@ -9,9 +10,8 @@ use std::{fs::File, io::Cursor, path::Path};
 use binrw::{BinRead, BinResult, BinWrite};
 
 #[doc(inline)]
-pub use m64::{
-    ControllerButton, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, Movie,
-    MovieStartType,
+pub use raw::m64::{
+    ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
 };
 
 /// Extensions for reading binary data.
@@ -79,9 +79,9 @@ macro_rules! impl_try_from {
     };
 }
 
-impl_try_from!(Movie);
-impl_bin_read_ext!(Movie);
-impl_bin_write_ext!(Movie);
+impl_try_from!(RawMovie);
+impl_bin_read_ext!(RawMovie);
+impl_bin_write_ext!(RawMovie);
 
 impl_try_from!(ExtendedFlags);
 impl_bin_read_ext!(ExtendedFlags);
