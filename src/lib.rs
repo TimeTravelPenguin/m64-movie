@@ -11,6 +11,7 @@ pub use parsed::Movie;
 #[doc(inline)]
 pub use raw::RawMovie;
 
+/// Error type for movie operations.
 #[derive(Debug, thiserror::Error)]
 pub enum MovieError {
     #[error("Failed to read movie data: {0}")]
@@ -21,6 +22,7 @@ pub enum MovieError {
     FixedStrError(#[from] EncodedFixedStrError),
 }
 
+/// Error type for fixed-size string encoding and decoding.
 #[derive(Debug, thiserror::Error)]
 pub enum EncodedFixedStrError {
     #[error("Invalid UTF-8 string: {0}")]

@@ -26,6 +26,7 @@ impl<const T: usize> Debug for Reserved<T> {
     }
 }
 
+/// A fixed-size string type that can hold a string of `N` bytes.
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct FixedStr<const N: usize>(zstr<N>);
 
@@ -73,6 +74,7 @@ impl<const N: usize> From<FixedStr<N>> for NullString {
     }
 }
 
+/// An enum representing a fixed-size string that can be either ASCII or UTF-8 encoded.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum EncodedFixedStr<const N: usize> {
     Ascii(FixedStr<N>),

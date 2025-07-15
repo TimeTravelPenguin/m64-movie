@@ -6,6 +6,7 @@ use crate::{
     shared::{EncodedFixedStr, Reserved},
 };
 
+/// Metadata for a Mupen64 movie file.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MupenMetadata {
     /// The version of the Mupen64 movie format.
@@ -19,6 +20,7 @@ pub struct MupenMetadata {
     pub extended_data: ExtendedData,
 }
 
+/// Information about the game used in the movie.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct GameInfo {
     /// The internal name of the ROM used in the movie. This value is taken
@@ -32,6 +34,7 @@ pub struct GameInfo {
     pub rom_country: u16,
 }
 
+/// Information about the plugins used in the movie.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PluginInfo {
     /// The name of the video plugin used in the movie. This value is
@@ -48,6 +51,7 @@ pub struct PluginInfo {
     pub rsp_plugin: EncodedFixedStr<64>,
 }
 
+/// Information about the recording, including author and movie details.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RecordingInfo {
     /// Author name info for the movie. Should be 222-byte UTF-8 string.
@@ -71,6 +75,11 @@ pub struct RecordingInfo {
     /// The start type of the movie, indicating how the movie begins.
     pub start_type: MovieStartType,
 }
+
+/// A Mupen64 movie file.
+///
+/// Only version 3 is supported. Please refer to the
+/// [file format documentation](https://tasvideos.org/EmulatorResources/Mupen/M64) for more details.
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Movie {

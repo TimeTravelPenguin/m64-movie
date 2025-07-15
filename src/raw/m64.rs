@@ -19,7 +19,7 @@ fn valid_only_if_ext_version_eq(extended_version: u8, valid_versions: &[u8], val
     valid_versions.contains(&extended_version) || value.iter().all(&|&b| b == 0)
 }
 
-/// A Mupen64 movie file.
+/// A raw Mupen64 movie file.
 ///
 /// Only version 3 is supported. Please refer to the
 /// [file format documentation](https://tasvideos.org/EmulatorResources/Mupen/M64) for more details.
