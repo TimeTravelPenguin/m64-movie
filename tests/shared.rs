@@ -1,5 +1,8 @@
 use binrw::NullString;
-use m64_movie::shared::{EncodedFixedStr, EncodedFixedStrError, FixedStr};
+use m64_movie::{
+    EncodedFixedStrError, MovieError,
+    shared::{EncodedFixedStr, FixedStr},
+};
 
 #[test]
 fn test_fixed_str_new() {
@@ -140,7 +143,7 @@ fn test_encoded_fixed_str_error_invalid_ascii() {
 
     assert!(result.is_err());
 
-    if let Err(EncodedFixedStrError::InvalidAscii(s)) = result {
+    if let Err(MovieError::StringError(EncodedFixedStrError::InvalidAscii(s))) = result {
         assert_eq!(s, "Hello, 世界!");
     } else {
         panic!("Expected InvalidAscii error");

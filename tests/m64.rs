@@ -2,8 +2,7 @@ use std::io::Cursor;
 
 use binrw::{BinWrite, meta::WriteEndian};
 use m64_movie::{
-    BinReadExt, BinWriteExt,
-    movie::ControllerButton,
+    BinReadExt, BinWriteExt, ControllerButton,
     parsed::m64::Movie,
     raw::m64::{
         ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,

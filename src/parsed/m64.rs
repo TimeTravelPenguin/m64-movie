@@ -1,6 +1,9 @@
 use crate::{
-    ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
-    shared::{EncodedFixedStr, EncodedFixedStrError, Reserved},
+    MovieError,
+    raw::{
+        ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
+    },
+    shared::{EncodedFixedStr, Reserved},
 };
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -84,7 +87,7 @@ pub struct Movie {
 }
 
 impl TryFrom<RawMovie> for Movie {
-    type Error = EncodedFixedStrError;
+    type Error = MovieError;
 
     fn try_from(raw: RawMovie) -> Result<Self, Self::Error> {
         Ok(Movie {
@@ -156,7 +159,7 @@ impl From<Movie> for RawMovie {
 
 impl Movie {
     /// Creates a new [`Movie`] from a [`RawMovie`].
-    pub fn from_raw(raw: RawMovie) -> Result<Self, EncodedFixedStrError> {
+    pub fn from_raw(raw: RawMovie) -> Result<Self, MovieError> {
         Self::try_from(raw)
     }
 

@@ -10,7 +10,7 @@ use bilge::{
 };
 use binrw::{BinRead, BinWrite, NullString, helpers::until_eof};
 
-use crate::{movie::ControllerButton, shared::Reserved};
+use crate::{ControllerButton, shared::Reserved};
 
 /// Validate a non-zero value that is only considered valid if
 /// the extended version is a specific value. The result is true if the

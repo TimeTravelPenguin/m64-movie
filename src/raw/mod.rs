@@ -4,12 +4,14 @@ use std::{fs::File, io::Cursor, path::Path};
 
 use binrw::{BinRead, BinWrite};
 
-use crate::{
-    BinReadExt, BinWriteExt, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags,
-    MovieError, MovieStartType, RawMovie,
-};
+use crate::{BinReadExt, BinWriteExt, MovieError};
 
 pub mod m64;
+
+#[doc(inline)]
+pub use m64::{
+    ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
+};
 
 macro_rules! impl_bin_read_ext {
     ($type:ty) => {

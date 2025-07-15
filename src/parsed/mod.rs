@@ -1,18 +1,25 @@
+//! Parsed movie data structures guaranteed to be valid Mupen64 movie files.
+
 pub mod m64;
 
-use crate::{BinReadExt, BinWriteExt, Movie, MovieError, Path, RawMovie};
+use std::path::Path;
+
+#[doc(inline)]
+pub use m64::{GameInfo, Movie, MupenMetadata, PluginInfo, RecordingInfo};
+
+use crate::{BinReadExt, BinWriteExt, MovieError, raw::m64::RawMovie};
 
 impl BinReadExt for Movie {
     type Error = MovieError;
 
     fn from_bytes(bytes: &[u8]) -> Result<Self, Self::Error> {
         let raw_movie = RawMovie::from_bytes(bytes)?;
-        Ok(Movie::try_from(raw_movie)?)
+        Movie::try_from(raw_movie)
     }
 
     fn from_file<P: AsRef<Path>>(path: P) -> Result<Self, Self::Error> {
         let raw_movie = RawMovie::from_file(path)?;
-        Ok(Movie::try_from(raw_movie)?)
+        Movie::try_from(raw_movie)
     }
 }
 

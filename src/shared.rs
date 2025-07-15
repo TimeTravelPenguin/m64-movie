@@ -4,7 +4,8 @@ use std::fmt::{self, Debug, Display};
 
 use binrw::{BinRead, BinWrite, NullString};
 use fixedstr::zstr;
-use thiserror::Error;
+
+use crate::{EncodedFixedStrError, MovieError};
 
 /// A struct implementing [`BinRead`] and [`BinWrite`] for reserved space in bytes.
 #[derive(Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
@@ -72,16 +73,6 @@ impl<const N: usize> From<FixedStr<N>> for NullString {
     }
 }
 
-#[derive(Debug, Error)]
-pub enum EncodedFixedStrError {
-    #[error("Invalid UTF-8 string: {0}")]
-    Utf8Error(#[from] std::str::Utf8Error),
-    #[error("Invalid ASCII string: {0}")]
-    InvalidAscii(String),
-    #[error("Fixed string error: {0}")]
-    FixedStrError(String),
-}
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum EncodedFixedStr<const N: usize> {
     Ascii(FixedStr<N>),
@@ -99,7 +90,7 @@ impl<const N: usize> Display for EncodedFixedStr<N> {
 
 impl<const N: usize> EncodedFixedStr<N> {
     /// Creates a new `EncodedFixedStr` from a UTF-8 string.
-    pub fn from_utf8<B: AsRef<[u8]>>(bytes: B) -> Result<Self, EncodedFixedStrError> {
+    pub fn from_utf8<B: AsRef<[u8]>>(bytes: B) -> Result<Self, MovieError> {
         let s = str::from_utf8(bytes.as_ref()).map_err(EncodedFixedStrError::Utf8Error)?;
 
         Ok(EncodedFixedStr::Utf8(
@@ -108,18 +99,18 @@ impl<const N: usize> EncodedFixedStr<N> {
     }
 
     /// Creates a new `EncodedFixedStr` from a UTF-8 string slice.
-    pub fn from_utf8_str<S: Into<String>>(s: S) -> Result<Self, EncodedFixedStrError> {
+    pub fn from_utf8_str<S: Into<String>>(s: S) -> Result<Self, MovieError> {
         EncodedFixedStr::from_utf8(s.into().as_bytes())
     }
 
     /// Creates a new `EncodedFixedStr` from an ASCII string.
-    pub fn from_ascii<B: AsRef<[u8]>>(bytes: B) -> Result<Self, EncodedFixedStrError> {
+    pub fn from_ascii<B: AsRef<[u8]>>(bytes: B) -> Result<Self, MovieError> {
         let s = str::from_utf8(bytes.as_ref())
             .map_err(EncodedFixedStrError::Utf8Error)?
             .to_string();
 
         if !s.is_ascii() {
-            return Err(EncodedFixedStrError::InvalidAscii(s));
+            return Err(EncodedFixedStrError::InvalidAscii(s).into());
         }
 
         Ok(EncodedFixedStr::Ascii(
@@ -128,7 +119,7 @@ impl<const N: usize> EncodedFixedStr<N> {
     }
 
     /// Creates a new `EncodedFixedStr` from an ASCII string slice.
-    pub fn from_ascii_str<S: Into<String>>(s: S) -> Result<Self, EncodedFixedStrError> {
+    pub fn from_ascii_str<S: Into<String>>(s: S) -> Result<Self, MovieError> {
         Self::from_ascii(s.into().as_bytes())
     }
 }
