@@ -164,4 +164,17 @@ impl Movie {
     pub fn into_raw(self) -> RawMovie {
         RawMovie::from(self)
     }
+
+    /// Returns an iterator over the controller states. Each iteration yields an iterator
+    /// containing the states of all controllers for that frame.
+    ///
+    /// Note that the index of each controller is determined by the game.
+    /// So, the first controller in a frame may not be "Player 1" in the game.
+    pub fn controller_inputs_stream(
+        &self,
+    ) -> impl Iterator<Item = impl Iterator<Item = &ControllerState>> {
+        self.inputs
+            .chunks(self.recording_info.controller_count as usize)
+            .map(move |chunk| chunk.iter())
+    }
 }
