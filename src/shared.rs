@@ -69,12 +69,6 @@ impl<const N: usize> From<FixedStr<N>> for NullString {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum EncodedFixedStr<const N: usize> {
-    Ascii(FixedStr<N>),
-    Utf8(FixedStr<N>),
-}
-
 #[derive(Debug, Error)]
 pub enum EncodedFixedStrError {
     #[error("Invalid UTF-8 string: {0}")]
@@ -83,6 +77,12 @@ pub enum EncodedFixedStrError {
     InvalidAscii(String),
     #[error("Fixed string error: {0}")]
     FixedStrError(String),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum EncodedFixedStr<const N: usize> {
+    Ascii(FixedStr<N>),
+    Utf8(FixedStr<N>),
 }
 
 impl<const N: usize> Display for EncodedFixedStr<N> {
