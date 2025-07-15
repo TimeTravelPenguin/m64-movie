@@ -16,6 +16,12 @@ pub struct Reserved<const T: usize> {
     pub reserved: [u8; T],
 }
 
+impl<const T: usize> Default for Reserved<T> {
+    fn default() -> Self {
+        Reserved { reserved: [0; T] }
+    }
+}
+
 impl<const T: usize> Debug for Reserved<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Reserved({} bytes)", T)
