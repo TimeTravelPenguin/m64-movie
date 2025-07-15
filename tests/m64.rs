@@ -3,9 +3,9 @@ use std::io::Cursor;
 use binrw::{BinWrite, meta::WriteEndian};
 use m64_movie::{
     BinReadExt, BinWriteExt,
-    m64::{
-        ControllerButton, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, Movie,
-        MovieStartType,
+    movie::ControllerButton,
+    raw::m64::{
+        ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
     },
     shared::Reserved,
 };
