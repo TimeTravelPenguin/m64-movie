@@ -143,7 +143,7 @@ fn test_encoded_fixed_str_error_invalid_ascii() {
 
     assert!(result.is_err());
 
-    if let Err(MovieError::StringError(EncodedFixedStrError::InvalidAscii(s))) = result {
+    if let Err(MovieError::FixedStrError(EncodedFixedStrError::InvalidAscii(s))) = result {
         assert_eq!(s, "Hello, 世界!");
     } else {
         panic!("Expected InvalidAscii error");
