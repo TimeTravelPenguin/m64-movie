@@ -3,7 +3,7 @@ use crate::{
     raw::{
         ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
     },
-    shared::{EncodedFixedStr, Reserved},
+    shared::{Ascii, EncodedFixedStr, Reserved, Utf8},
 };
 
 /// Metadata for a Mupen64 movie file.
@@ -25,7 +25,7 @@ pub struct MupenMetadata {
 pub struct GameInfo {
     /// The internal name of the ROM used in the movie. This value is taken
     /// directly from the ROM. Should be a 32-byte ASCII string.
-    pub rom_name: EncodedFixedStr<32>,
+    pub rom_name: EncodedFixedStr<32, Ascii>,
     /// The CRC32 checksum of the ROM used in the movie. This value is taken
     /// directly from the ROM.
     pub rom_crc32: u32,
@@ -39,25 +39,25 @@ pub struct GameInfo {
 pub struct PluginInfo {
     /// The name of the video plugin used in the movie. This value is
     /// taken directly from the plugin. Should be a 64-byte ASCII string.
-    pub video_plugin: EncodedFixedStr<64>,
+    pub video_plugin: EncodedFixedStr<64, Ascii>,
     /// The name of the sound plugin used in the movie. This value is
     /// taken directly from the plugin. Should be 64-byte ASCII string.
-    pub sound_plugin: EncodedFixedStr<64>,
+    pub sound_plugin: EncodedFixedStr<64, Ascii>,
     /// The name of the input plugin used in the movie. This value is
     /// taken directly from the plugin. Should be 64-byte ASCII string.
-    pub input_plugin: EncodedFixedStr<64>,
+    pub input_plugin: EncodedFixedStr<64, Ascii>,
     /// The name of the RSP plugin used in the movie. This value is
     /// taken directly from the plugin. Should be 64-byte ASCII string.
-    pub rsp_plugin: EncodedFixedStr<64>,
+    pub rsp_plugin: EncodedFixedStr<64, Ascii>,
 }
 
 /// Information about the recording, including author and movie details.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct RecordingInfo {
     /// Author name info for the movie. Should be 222-byte UTF-8 string.
-    pub author_name: EncodedFixedStr<222>,
+    pub author_name: EncodedFixedStr<222, Utf8>,
     /// Author description info for the movie. Should be 256-byte UTF-8 string.
-    pub description: EncodedFixedStr<256>,
+    pub description: EncodedFixedStr<256, Utf8>,
     /// The unique identifier for the movie.
     pub uid: u32,
     /// The number of vertical interrupts in the movie.
