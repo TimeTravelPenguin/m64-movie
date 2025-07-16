@@ -5,7 +5,10 @@ pub mod m64;
 use std::path::Path;
 
 #[doc(inline)]
-pub use m64::{GameInfo, Movie, MupenMetadata, PluginInfo, RecordingInfo};
+pub use m64::{
+    ExtendedData, ExtendedFlags, GameInfo, Movie, MovieDetails, MupenMetadata, PluginInfo,
+    RecordingInfo,
+};
 
 use crate::{BinReadExt, BinWriteExt, MovieError, raw::m64::RawMovie};
 

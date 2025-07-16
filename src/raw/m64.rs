@@ -239,7 +239,7 @@ impl ControllerFlags {
 }
 
 /// A 32-byte structure for extended data found at offset 0x024 in the Mupen64 movie header.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[brw(little)]
 pub struct ExtendedData {
     /// Special authorship information.

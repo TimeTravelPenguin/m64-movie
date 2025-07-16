@@ -3,7 +3,7 @@ use std::io::Cursor;
 use binrw::{BinWrite, meta::WriteEndian};
 use m64_movie::{
     BinReadExt, BinWriteExt, ControllerButton,
-    parsed::m64::Movie,
+    parsed::{self, m64::Movie},
     raw::m64::{
         ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
     },
@@ -442,15 +442,21 @@ fn test_parsed_from_raw_movie() {
 
     // Metadata checks
     assert_eq!(parsed_movie.metadata.version, raw_movie.version);
+
     assert_eq!(
         parsed_movie.metadata.extended_version,
         raw_movie.extended_version
     );
-    assert_eq!(
-        parsed_movie.metadata.extended_flags,
-        raw_movie.extended_flags
-    );
-    assert_eq!(parsed_movie.metadata.extended_data, raw_movie.extended_data);
+
+    let parsed::m64::ExtendedFlags::ExtendedFlagsV0 = parsed_movie.metadata.extended_flags else {
+        panic!("Parsed movie should have ExtendedFlags");
+    };
+
+    let parsed::m64::ExtendedData::ExtendedDataV0 = parsed_movie.metadata.extended_data else {
+        panic!("Raw movie should have ExtendedData");
+    };
+
+    // TODO: Need test to cover Extended metadata type
 
     // Game info checks
     assert_eq!(

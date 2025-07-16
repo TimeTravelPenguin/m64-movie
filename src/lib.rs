@@ -20,6 +20,8 @@ pub enum MovieError {
     FileError(#[from] std::io::Error),
     #[error("Failed to parse string: {0}")]
     FixedStrError(#[from] EncodedFixedStrError),
+    #[error("Failed to parse movie: {0}")]
+    MovieParseError(#[from] MovieParseError),
 }
 
 /// Error type for fixed-size string encoding and decoding.
@@ -31,6 +33,14 @@ pub enum EncodedFixedStrError {
     InvalidAscii(String),
     #[error("Fixed string error: {0}")]
     FixedStrError(String),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum MovieParseError {
+    #[error("Invalid movie version: {0}")]
+    UnsupportedVersion(u32),
+    #[error("Invalid movie extended version: {0}")]
+    UnsupportedExtendedVersion(u8),
 }
 
 /// Extensions for reading binary data.

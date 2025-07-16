@@ -1,10 +1,62 @@
 use crate::{
-    MovieError,
-    raw::{
-        ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
-    },
+    MovieError, MovieParseError,
+    raw::{self, ControllerFlags, ControllerState, MovieStartType, RawMovie},
     shared::{Ascii, EncodedFixedStr, Reserved, Utf8},
 };
+
+/// Extended flags for Mupen64 movies.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum ExtendedFlags {
+    ExtendedFlagsV0,
+    ExtendedFlagsV1 { wiivc_emulation_mode: bool },
+}
+
+impl From<ExtendedFlags> for raw::ExtendedFlags {
+    fn from(flags: ExtendedFlags) -> raw::ExtendedFlags {
+        let mut raw_flags = raw::ExtendedFlags::default();
+        match flags {
+            ExtendedFlags::ExtendedFlagsV0 => {}
+            ExtendedFlags::ExtendedFlagsV1 {
+                wiivc_emulation_mode,
+            } => {
+                raw_flags.set_wiivc_emulation_mode(wiivc_emulation_mode);
+            }
+        }
+
+        raw_flags
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum ExtendedData {
+    ExtendedDataV0,
+    ExtendedDataV1 {
+        /// Special authorship information.
+        authorship_info: u32,
+        /// Data regarding bruteforcing.
+        bruteforce_data: u32,
+        /// The high word of the rerecord count.
+        rerecord_count_high: u32,
+    },
+}
+
+impl From<ExtendedData> for raw::ExtendedData {
+    fn from(data: ExtendedData) -> raw::ExtendedData {
+        match data {
+            ExtendedData::ExtendedDataV0 => raw::ExtendedData::default(),
+            ExtendedData::ExtendedDataV1 {
+                authorship_info,
+                bruteforce_data,
+                rerecord_count_high,
+            } => raw::ExtendedData {
+                authorship_info,
+                bruteforce_data,
+                rerecord_count_high,
+                reserved: Reserved::default(),
+            },
+        }
+    }
+}
 
 /// Metadata for a Mupen64 movie file.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -95,40 +147,108 @@ pub struct Movie {
     pub inputs: Vec<ControllerState>,
 }
 
+pub trait MovieDetails {
+    /// Creates a new instance from the raw type.
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError>
+    where
+        Self: Sized;
+}
+
+impl MovieDetails for ExtendedFlags {
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError> {
+        if raw.extended_version == 0 {
+            Ok(ExtendedFlags::ExtendedFlagsV0)
+        } else if raw.extended_version == 1 {
+            Ok(ExtendedFlags::ExtendedFlagsV1 {
+                wiivc_emulation_mode: raw.extended_flags.wiivc_emulation_mode(),
+            })
+        } else {
+            Err(MovieParseError::UnsupportedExtendedVersion(raw.extended_version).into())
+        }
+    }
+}
+
+impl MovieDetails for ExtendedData {
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError> {
+        if raw.extended_version == 0 {
+            Ok(ExtendedData::ExtendedDataV0)
+        } else if raw.extended_version == 1 {
+            Ok(ExtendedData::ExtendedDataV1 {
+                authorship_info: raw.extended_data.authorship_info,
+                bruteforce_data: raw.extended_data.bruteforce_data,
+                rerecord_count_high: raw.extended_data.rerecord_count_high,
+            })
+        } else {
+            Err(MovieParseError::UnsupportedExtendedVersion(raw.extended_version).into())
+        }
+    }
+}
+
+impl MovieDetails for MupenMetadata {
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError> {
+        if raw.version != 3 {
+            return Err(MovieParseError::UnsupportedVersion(raw.version).into());
+        }
+
+        let extended_flags = ExtendedFlags::from_raw(raw)?;
+        let extended_data = ExtendedData::from_raw(raw)?;
+
+        Ok(MupenMetadata {
+            version: raw.version,
+            extended_version: raw.extended_version,
+            extended_flags,
+            extended_data,
+        })
+    }
+}
+
+impl MovieDetails for GameInfo {
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError> {
+        Ok(GameInfo {
+            rom_name: EncodedFixedStr::from_ascii_str(raw.rom_name.to_string())?,
+            rom_crc32: raw.rom_crc32,
+            rom_country: raw.rom_country,
+        })
+    }
+}
+
+impl MovieDetails for PluginInfo {
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError> {
+        Ok(PluginInfo {
+            video_plugin: EncodedFixedStr::from_ascii_str(raw.video_plugin.to_string())?,
+            sound_plugin: EncodedFixedStr::from_ascii_str(raw.sound_plugin.to_string())?,
+            input_plugin: EncodedFixedStr::from_ascii_str(raw.input_plugin.to_string())?,
+            rsp_plugin: EncodedFixedStr::from_ascii_str(raw.rsp_plugin.to_string())?,
+        })
+    }
+}
+
+impl MovieDetails for RecordingInfo {
+    fn from_raw(raw: &RawMovie) -> Result<Self, MovieError> {
+        Ok(RecordingInfo {
+            author_name: EncodedFixedStr::from_utf8_str(raw.author_name.to_string())?,
+            description: EncodedFixedStr::from_utf8_str(raw.description.to_string())?,
+            uid: raw.uid,
+            vertical_interrupts: raw.vertical_interrupts,
+            rerecord_count: raw.rerecord_count,
+            vis_per_second: raw.vis_per_second,
+            controller_count: raw.controller_count,
+            controller_input_samples: raw.controller_input_samples,
+            controller_flags: raw.controller_flags,
+            start_type: raw.start_type,
+        })
+    }
+}
+
 impl TryFrom<RawMovie> for Movie {
     type Error = MovieError;
 
     fn try_from(raw: RawMovie) -> Result<Self, Self::Error> {
         Ok(Movie {
-            metadata: MupenMetadata {
-                version: raw.version,
-                extended_version: raw.extended_version,
-                extended_flags: raw.extended_flags,
-                extended_data: raw.extended_data,
-            },
-            game_info: GameInfo {
-                rom_name: EncodedFixedStr::from_ascii_str(raw.rom_name.to_string())?,
-                rom_crc32: raw.rom_crc32,
-                rom_country: raw.rom_country,
-            },
-            plugin_info: PluginInfo {
-                video_plugin: EncodedFixedStr::from_ascii_str(raw.video_plugin.to_string())?,
-                sound_plugin: EncodedFixedStr::from_ascii_str(raw.sound_plugin.to_string())?,
-                input_plugin: EncodedFixedStr::from_ascii_str(raw.input_plugin.to_string())?,
-                rsp_plugin: EncodedFixedStr::from_ascii_str(raw.rsp_plugin.to_string())?,
-            },
-            recording_info: RecordingInfo {
-                author_name: EncodedFixedStr::from_utf8_str(raw.author_name.to_string())?,
-                description: EncodedFixedStr::from_utf8_str(raw.description.to_string())?,
-                uid: raw.uid,
-                vertical_interrupts: raw.vertical_interrupts,
-                rerecord_count: raw.rerecord_count,
-                vis_per_second: raw.vis_per_second,
-                controller_count: raw.controller_count,
-                controller_input_samples: raw.controller_input_samples,
-                controller_flags: raw.controller_flags,
-                start_type: raw.start_type,
-            },
+            metadata: MupenMetadata::from_raw(&raw)?,
+            game_info: GameInfo::from_raw(&raw)?,
+            plugin_info: PluginInfo::from_raw(&raw)?,
+            recording_info: RecordingInfo::from_raw(&raw)?,
             inputs: raw.inputs,
         })
     }
@@ -139,8 +259,8 @@ impl From<Movie> for RawMovie {
         RawMovie {
             version: movie.metadata.version,
             extended_version: movie.metadata.extended_version,
-            extended_flags: movie.metadata.extended_flags,
-            extended_data: movie.metadata.extended_data,
+            extended_flags: movie.metadata.extended_flags.into(),
+            extended_data: movie.metadata.extended_data.into(),
             rom_name: movie.game_info.rom_name.to_string().into(),
             rom_crc32: movie.game_info.rom_crc32,
             rom_country: movie.game_info.rom_country,
