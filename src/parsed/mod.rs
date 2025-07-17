@@ -1,14 +1,14 @@
 //! Parsed movie data structures guaranteed to be valid Mupen64 movie files.
 
-pub mod m64;
-
 use std::path::Path;
 
+#[doc(hidden)]
+pub mod m64;
+
+pub use crate::raw::{ControllerFlags, ControllerState, MovieStartType};
+
 #[doc(inline)]
-pub use m64::{
-    ExtendedData, ExtendedFlags, GameInfo, Movie, MovieDetails, MupenMetadata, PluginInfo,
-    RecordingInfo,
-};
+pub use m64::*;
 
 use crate::{BinReadExt, BinWriteExt, MovieError, raw::m64::RawMovie};
 

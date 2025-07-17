@@ -6,12 +6,11 @@ use binrw::{BinRead, BinWrite};
 
 use crate::{BinReadExt, BinWriteExt, MovieError};
 
+#[doc(hidden)]
 pub mod m64;
 
 #[doc(inline)]
-pub use m64::{
-    ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
-};
+pub use m64::*;
 
 macro_rules! impl_bin_read_ext {
     ($type:ty) => {
