@@ -3,8 +3,7 @@ use m64_movie::{BinReadExt, raw::m64::RawMovie};
 static MOVIE_BYTES: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/movies/1key.m64"));
 
 fn main() {
-    let bytes = MOVIE_BYTES.to_vec();
-    let movie = RawMovie::from_bytes(&bytes).expect("Failed to parse movie bytes");
+    let movie = RawMovie::from_bytes(MOVIE_BYTES).expect("Failed to parse movie bytes");
 
     println!("Author: {}", movie.author_name);
     println!("Description: {}", movie.description);
