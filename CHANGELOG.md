@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-- revert rename
 - added missing docs
 
 ## [0.4.0](https://github.com/TimeTravelPenguin/m64-movie/compare/v0.3.1...v0.4.0) - 2025-07-17
