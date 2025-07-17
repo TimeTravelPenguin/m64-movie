@@ -37,7 +37,9 @@ pub struct Utf8;
 /// An enum representing a fixed-size string that can be either ASCII or UTF-8 encoded.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct EncodedFixedStr<const N: usize, E> {
+    /// The underlying fixed-size string value.
     value: zstr<N>,
+    /// A marker to indicate the encoding type.
     _marker: std::marker::PhantomData<E>,
 }
 
@@ -47,13 +49,17 @@ impl<const N: usize, E> Display for EncodedFixedStr<N, E> {
     }
 }
 
+/// A trait for fixed-size strings that can be constructed from bytes or strings.
 pub trait FixedString
 where
     Self: Sized,
 {
+    /// The error type returned by the methods of this trait.
     type Error;
 
+    /// Creates a new instance from bytes.
     fn from_bytes<B: AsRef<[u8]>>(bytes: B) -> Result<Self, Self::Error>;
+    /// Creates a new instance from a string slice.
     fn from_str<S: AsRef<str>>(s: S) -> Result<Self, Self::Error>;
 }
 
@@ -69,7 +75,7 @@ impl<const N: usize> EncodedFixedStr<N, Utf8> {
     pub fn from_utf8_str<S: AsRef<str>>(s: S) -> Result<Self, MovieError> {
         Ok(EncodedFixedStr {
             value: zstr::try_make(s.as_ref())
-                .map_err(|err: &str| EncodedFixedStrError::FixedStrError(err.to_string()))?,
+                .map_err(|err: &str| EncodedFixedStrError::ZStrError(err.to_string()))?,
             _marker: std::marker::PhantomData,
         })
     }
@@ -105,7 +111,7 @@ impl<const N: usize> EncodedFixedStr<N, Ascii> {
 
         Ok(EncodedFixedStr {
             value: zstr::try_make(s)
-                .map_err(|arg0: &str| EncodedFixedStrError::FixedStrError(arg0.to_string()))?,
+                .map_err(|arg0: &str| EncodedFixedStrError::ZStrError(arg0.to_string()))?,
             _marker: std::marker::PhantomData,
         })
     }

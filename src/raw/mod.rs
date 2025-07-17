@@ -12,6 +12,7 @@ pub mod m64;
 #[doc(inline)]
 pub use m64::*;
 
+/// Helper macro to implement `BinReadExt` and `BinWriteExt` traits for a type implementing [`BinRead`].
 macro_rules! impl_bin_read_ext {
     ($type:ty) => {
         impl BinReadExt for $type {
@@ -30,6 +31,7 @@ macro_rules! impl_bin_read_ext {
     };
 }
 
+/// Helper macro to implement `BinWriteExt` traits for a type implementing [`BinWrite`].
 macro_rules! impl_bin_write_ext {
     ($type:ty) => {
         impl BinWriteExt for $type {
@@ -50,6 +52,7 @@ macro_rules! impl_bin_write_ext {
     };
 }
 
+/// Helper macro to implement `TryFrom<&[u8]>` for a type that can be constructed from bytes.
 macro_rules! impl_try_from {
     ($type:ty) => {
         impl TryFrom<&[u8]> for $type {
