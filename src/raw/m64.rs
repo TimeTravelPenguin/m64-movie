@@ -10,7 +10,7 @@ use bilge::{
 };
 use binrw::{BinRead, BinWrite, NullString, helpers::until_eof};
 
-use crate::shared::Reserved;
+use crate::{ControllerButton, shared::Reserved};
 
 /// Validate a non-zero value that is only considered valid if
 /// the extended version is a specific value. The result is true if the
@@ -19,7 +19,7 @@ fn valid_only_if_ext_version_eq(extended_version: u8, valid_versions: &[u8], val
     valid_versions.contains(&extended_version) || value.iter().all(&|&b| b == 0)
 }
 
-/// A Mupen64 movie file.
+/// A raw Mupen64 movie file.
 ///
 /// Only version 3 is supported. Please refer to the
 /// [file format documentation](https://tasvideos.org/EmulatorResources/Mupen/M64) for more details.
@@ -60,7 +60,7 @@ fn valid_only_if_ext_version_eq(extended_version: u8, valid_versions: &[u8], val
         "Rerecord count high is only valid if extended version is 1."
     ),
 )]
-pub struct Movie {
+pub struct RawMovie {
     /// The version of the Mupen64 movie format.
     pub version: u32, // 0x004
 
@@ -169,7 +169,7 @@ pub struct Movie {
     pub inputs: Vec<ControllerState>, // 0x400
 }
 
-impl Movie {
+impl RawMovie {
     /// Returns an iterator over the controller states. Each iteration yields an iterator
     /// containing the states of all controllers for that frame.
     ///
@@ -239,7 +239,7 @@ impl ControllerFlags {
 }
 
 /// A 32-byte structure for extended data found at offset 0x024 in the Mupen64 movie header.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, BinRead, BinWrite)]
 #[brw(little)]
 pub struct ExtendedData {
     /// Special authorship information.
@@ -284,43 +284,6 @@ impl TryFrom<&[u8]> for MovieStartType {
         let mut cursor = Cursor::new(bytes);
         MovieStartType::read(&mut cursor)
     }
-}
-
-/// An enum representing the buttons on a Mupen64 controller.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ControllerButton {
-    /// The right directional pad button.
-    DPadRight,
-    /// The left directional pad button.
-    DPadLeft,
-    /// The down directional pad button.
-    DPadDown,
-    /// The up directional pad button.
-    DPadUp,
-    /// The start button.
-    Start,
-    /// The Z button.
-    Z,
-    /// The B button.
-    B,
-    /// The A button.
-    A,
-    /// The C-right button.
-    CRight,
-    /// The C-left button.
-    CLeft,
-    /// The C-down button.
-    CDown,
-    /// The C-up button.
-    CUp,
-    /// The right trigger button.
-    TriggerRight,
-    /// The left trigger button.
-    TriggerLeft,
-    /// Reserved button 01.
-    Reserved01,
-    /// Reserved button 02.
-    Reserved02,
 }
 
 /// A 4-byte structure representing controller input.

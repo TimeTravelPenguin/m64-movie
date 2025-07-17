@@ -2,10 +2,10 @@ use std::io::Cursor;
 
 use binrw::{BinWrite, meta::WriteEndian};
 use m64_movie::{
-    BinReadExt, BinWriteExt,
-    m64::{
-        ControllerButton, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, Movie,
-        MovieStartType,
+    BinReadExt, BinWriteExt, ControllerButton,
+    parsed::{self, m64::Movie},
+    raw::m64::{
+        ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, MovieStartType, RawMovie,
     },
     shared::Reserved,
 };
@@ -50,7 +50,7 @@ where
 #[test]
 fn test_parsed_movie_has_same_bytes() {
     for bytes in [MOVIE_120STAR_BYTES, MOVIE_1KEY_BYTES] {
-        let raw_movie = Movie::from_bytes(bytes).unwrap();
+        let raw_movie = RawMovie::from_bytes(bytes).unwrap();
         let movie_bytes = raw_movie.to_bytes().unwrap();
 
         assert!(
@@ -65,7 +65,7 @@ fn test_movie_parsing_basic_properties() {
     // NOTE: This test assumes that the movies are valid and well-formed.
     // This should be updated when additional movies are added for testing.
     for bytes in [MOVIE_120STAR_BYTES, MOVIE_1KEY_BYTES] {
-        let movie = Movie::from_bytes(bytes).unwrap();
+        let movie = RawMovie::from_bytes(bytes).unwrap();
 
         // Check basic properties
         assert_eq!(movie.version, 3);
@@ -78,7 +78,7 @@ fn test_movie_parsing_basic_properties() {
 
 #[test]
 fn test_movie_inputs_grouped() {
-    let movie = Movie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
     let grouped = movie.controller_inputs_stream().collect::<Vec<_>>();
 
     // Should have the correct number of groups
@@ -294,7 +294,7 @@ fn test_extended_data() {
 
 #[test]
 fn test_movie_rom_info() {
-    let movie = Movie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
 
     // ROM name should be ASCII and not empty
     let rom_name = movie.rom_name.to_string();
@@ -308,7 +308,7 @@ fn test_movie_rom_info() {
 
 #[test]
 fn test_movie_plugin_names() {
-    let movie = Movie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
 
     // All plugin names should be ASCII
     assert!(movie.video_plugin.to_string().is_ascii());
@@ -319,7 +319,7 @@ fn test_movie_plugin_names() {
 
 #[test]
 fn test_movie_author_info() {
-    let movie = Movie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
 
     // Author name and description should be ASCII
     assert!(movie.author_name.to_string().is_ascii());
@@ -333,7 +333,7 @@ fn test_invalid_magic() {
     // Change the magic bytes
     invalid_bytes[0..4].copy_from_slice(b"INV\x1A");
 
-    let result = Movie::from_bytes(&invalid_bytes);
+    let result = RawMovie::from_bytes(&invalid_bytes);
     assert!(result.is_err());
 }
 
@@ -344,15 +344,15 @@ fn test_invalid_version() {
     // Change version to something other than 3
     invalid_bytes[4..8].copy_from_slice(&2u32.to_le_bytes());
 
-    let result = Movie::from_bytes(&invalid_bytes);
+    let result = RawMovie::from_bytes(&invalid_bytes);
     assert!(result.is_err());
 }
 
 #[test]
 fn test_movie_roundtrip() {
-    let original_movie = Movie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let original_movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
     let movie_bytes = original_movie.to_bytes().unwrap();
-    let roundtrip_movie = Movie::from_bytes(&movie_bytes).unwrap();
+    let roundtrip_movie = RawMovie::from_bytes(&movie_bytes).unwrap();
 
     // The movies should be identical
     assert_eq!(original_movie, roundtrip_movie);
@@ -363,7 +363,7 @@ fn test_to_file_matches_input_file() {
     let input_files = [MOVIE_120STAR_PATH, MOVIE_1KEY_PATH];
 
     for &file_path in &input_files {
-        let movie = Movie::from_file(file_path).unwrap();
+        let movie = RawMovie::from_file(file_path).unwrap();
 
         let temp_file = tempfile::NamedTempFile::new().unwrap();
         movie.to_file(temp_file.path()).unwrap();
@@ -382,7 +382,8 @@ fn test_to_file_matches_input_file() {
 fn test_ext_version_cases() -> Result<(), String> {
     let mut bytes = MOVIE_120STAR_BYTES.to_vec();
 
-    let movie = Movie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
+    let movie =
+        RawMovie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
     assert_eq!(movie.extended_version, 0, "Initial ext_version should be 0");
 
     // Set the extended version to 1
@@ -392,7 +393,8 @@ fn test_ext_version_cases() -> Result<(), String> {
         &1u8.to_le_bytes(),
     )?;
 
-    let movie = Movie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
+    let movie =
+        RawMovie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
     assert_eq!(movie.extended_version, 1, "Extended version should be 1");
 
     // Set the extended flags to enable WiiVC emulation mode.
@@ -410,7 +412,8 @@ fn test_ext_version_cases() -> Result<(), String> {
         &ext_flags_bytes,
     )?;
 
-    let movie = Movie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
+    let movie =
+        RawMovie::from_bytes(&bytes).map_err(|e| format!("Failed to parse movie: {}", e))?;
     assert_eq!(
         movie.extended_flags, ext_flags,
         "Extended flags should match after modification"
@@ -423,8 +426,100 @@ fn test_ext_version_cases() -> Result<(), String> {
         &0u8.to_le_bytes(),
     )?;
 
-    let movie = Movie::from_bytes(&bytes);
-    assert!(movie.is_err(), "Movie should not parse with ext_version 1");
+    let movie = RawMovie::from_bytes(&bytes);
+    assert!(
+        movie.is_err(),
+        "RawMovie should not parse with ext_version 1"
+    );
 
     Ok(())
+}
+
+#[test]
+fn test_parsed_from_raw_movie() {
+    let raw_movie = RawMovie::from_bytes(MOVIE_120STAR_BYTES).unwrap();
+    let parsed_movie: Movie = raw_movie.clone().try_into().unwrap();
+
+    // Metadata checks
+    assert_eq!(parsed_movie.metadata.version, raw_movie.version);
+
+    assert_eq!(
+        parsed_movie.metadata.extended_version,
+        raw_movie.extended_version
+    );
+
+    let parsed::m64::ExtendedFlags::ExtendedFlagsV0 = parsed_movie.metadata.extended_flags else {
+        panic!("Parsed movie should have ExtendedFlags");
+    };
+
+    let parsed::m64::ExtendedData::ExtendedDataV0 = parsed_movie.metadata.extended_data else {
+        panic!("Raw movie should have ExtendedData");
+    };
+
+    // TODO: Need test to cover Extended metadata type
+
+    // Game info checks
+    assert_eq!(
+        parsed_movie.game_info.rom_name.to_string(),
+        raw_movie.rom_name.to_string()
+    );
+    assert_eq!(parsed_movie.game_info.rom_crc32, raw_movie.rom_crc32);
+    assert_eq!(parsed_movie.game_info.rom_country, raw_movie.rom_country);
+
+    // Plugin info checks
+    assert_eq!(
+        parsed_movie.plugin_info.video_plugin.to_string(),
+        raw_movie.video_plugin.to_string()
+    );
+    assert_eq!(
+        parsed_movie.plugin_info.sound_plugin.to_string(),
+        raw_movie.sound_plugin.to_string()
+    );
+    assert_eq!(
+        parsed_movie.plugin_info.input_plugin.to_string(),
+        raw_movie.input_plugin.to_string()
+    );
+    assert_eq!(
+        parsed_movie.plugin_info.rsp_plugin.to_string(),
+        raw_movie.rsp_plugin.to_string()
+    );
+
+    // Recording info checks
+    assert_eq!(
+        parsed_movie.recording_info.author_name.to_string(),
+        raw_movie.author_name.to_string()
+    );
+    assert_eq!(
+        parsed_movie.recording_info.description.to_string(),
+        raw_movie.description.to_string()
+    );
+    assert_eq!(parsed_movie.recording_info.uid, raw_movie.uid);
+    assert_eq!(
+        parsed_movie.recording_info.vertical_interrupts,
+        raw_movie.vertical_interrupts
+    );
+    assert_eq!(
+        parsed_movie.recording_info.rerecord_count,
+        raw_movie.rerecord_count
+    );
+    assert_eq!(
+        parsed_movie.recording_info.vis_per_second,
+        raw_movie.vis_per_second
+    );
+    assert_eq!(
+        parsed_movie.recording_info.controller_count,
+        raw_movie.controller_count
+    );
+    assert_eq!(
+        parsed_movie.recording_info.controller_input_samples,
+        raw_movie.controller_input_samples
+    );
+    assert_eq!(
+        parsed_movie.recording_info.controller_flags,
+        raw_movie.controller_flags
+    );
+    assert_eq!(parsed_movie.recording_info.start_type, raw_movie.start_type);
+
+    // Inputs checks
+    assert_eq!(parsed_movie.inputs, raw_movie.inputs);
 }

@@ -1,102 +1,103 @@
 #![doc = include_str!("../README.md")]
 
 pub mod doc;
-pub mod m64;
+pub mod parsed;
+pub mod raw;
 pub mod shared;
 
-use std::{fs::File, io::Cursor, path::Path};
-
-use binrw::{BinRead, BinResult, BinWrite};
+#[doc(inline)]
+pub use parsed::Movie;
 
 #[doc(inline)]
-pub use m64::{
-    ControllerButton, ControllerFlags, ControllerState, ExtendedData, ExtendedFlags, Movie,
-    MovieStartType,
-};
+pub use raw::RawMovie;
+
+/// Error type for [`RawMovie`] operations.
+#[derive(Debug, thiserror::Error)]
+pub enum MovieError {
+    #[error("Failed to read movie data: {0}")]
+    BinRWError(#[from] binrw::Error),
+    #[error("Failed to read file: {0}")]
+    FileError(#[from] std::io::Error),
+    #[error("Failed to parse string: {0}")]
+    FixedStrError(#[from] EncodedFixedStrError),
+    #[error("Failed to parse movie: {0}")]
+    MovieParseError(#[from] MovieParseError),
+}
+
+/// Error type for [`EncodedFixedStr`](`shared::EncodedFixedStr`) encoding and decoding.
+#[derive(Debug, thiserror::Error)]
+pub enum EncodedFixedStrError {
+    #[error("Invalid UTF-8 string: {0}")]
+    Utf8Error(#[from] std::str::Utf8Error),
+    #[error("Invalid ASCII string: {0}")]
+    InvalidAscii(String),
+    #[error("Fixed string error: {0}")]
+    FixedStrError(String),
+}
+
+/// Error type for [`Movie`] parsing errors.
+#[derive(Debug, thiserror::Error)]
+pub enum MovieParseError {
+    #[error("Invalid movie version: {0}")]
+    UnsupportedVersion(u32),
+    #[error("Invalid movie extended version: {0}")]
+    UnsupportedExtendedVersion(u8),
+}
 
 /// Extensions for reading binary data.
 pub trait BinReadExt
 where
     Self: Sized,
 {
+    type Error;
     /// Reads the binary data from a byte slice.
-    fn from_bytes(bytes: &[u8]) -> BinResult<Self>;
+    fn from_bytes(bytes: &[u8]) -> Result<Self, Self::Error>;
     /// Reads the binary data from a file.
-    fn from_file<P: AsRef<Path>>(path: P) -> BinResult<Self>;
+    fn from_file<P: AsRef<std::path::Path>>(path: P) -> Result<Self, Self::Error>;
 }
 
 /// Extensions for writing binary data.
 pub trait BinWriteExt {
+    type Error;
     /// Converts the instance to a byte vector.
-    fn to_bytes(&self) -> BinResult<Vec<u8>>;
+    fn to_bytes(&self) -> Result<Vec<u8>, Self::Error>;
     /// Writes the instance to a binary file.
-    fn to_file<P: AsRef<Path>>(&self, path: P) -> BinResult<()>;
+    fn to_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<(), Self::Error>;
 }
 
-macro_rules! impl_bin_read_ext {
-    ($type:ty) => {
-        impl BinReadExt for $type {
-            fn from_bytes(bytes: &[u8]) -> BinResult<Self> {
-                let mut cursor = Cursor::new(bytes);
-                Self::read_le(&mut cursor)
-            }
-
-            fn from_file<P: AsRef<Path>>(path: P) -> BinResult<Self> {
-                let mut file = File::open(path)?;
-                Self::read_le(&mut file)
-            }
-        }
-    };
+/// An enum representing the buttons on a Mupen64 controller.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum ControllerButton {
+    /// The right directional pad button.
+    DPadRight,
+    /// The left directional pad button.
+    DPadLeft,
+    /// The down directional pad button.
+    DPadDown,
+    /// The up directional pad button.
+    DPadUp,
+    /// The start button.
+    Start,
+    /// The Z button.
+    Z,
+    /// The B button.
+    B,
+    /// The A button.
+    A,
+    /// The C-right button.
+    CRight,
+    /// The C-left button.
+    CLeft,
+    /// The C-down button.
+    CDown,
+    /// The C-up button.
+    CUp,
+    /// The right trigger button.
+    TriggerRight,
+    /// The left trigger button.
+    TriggerLeft,
+    /// Reserved button 01.
+    Reserved01,
+    /// Reserved button 02.
+    Reserved02,
 }
-
-macro_rules! impl_bin_write_ext {
-    ($type:ty) => {
-        impl BinWriteExt for $type {
-            fn to_bytes(&self) -> BinResult<Vec<u8>> {
-                let mut cursor = Cursor::new(Vec::new());
-                self.write(&mut cursor)?;
-                Ok(cursor.into_inner())
-            }
-
-            fn to_file<P: AsRef<Path>>(&self, path: P) -> BinResult<()> {
-                let mut file = File::create(path)?;
-                self.write(&mut file)?;
-                Ok(())
-            }
-        }
-    };
-}
-
-macro_rules! impl_try_from {
-    ($type:ty) => {
-        impl TryFrom<&[u8]> for $type {
-            type Error = binrw::Error;
-
-            fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
-                Self::from_bytes(bytes)
-            }
-        }
-    };
-}
-
-impl_try_from!(Movie);
-impl_bin_read_ext!(Movie);
-impl_bin_write_ext!(Movie);
-
-impl_try_from!(ExtendedFlags);
-impl_bin_read_ext!(ExtendedFlags);
-impl_bin_write_ext!(ExtendedFlags);
-
-impl_bin_read_ext!(MovieStartType);
-impl_bin_write_ext!(MovieStartType);
-
-impl_try_from!(ControllerFlags);
-impl_bin_read_ext!(ControllerFlags);
-impl_bin_write_ext!(ControllerFlags);
-
-impl_bin_read_ext!(ExtendedData);
-impl_bin_write_ext!(ExtendedData);
-
-impl_try_from!(ControllerState);
-impl_bin_read_ext!(ControllerState);
-impl_bin_write_ext!(ControllerState);
