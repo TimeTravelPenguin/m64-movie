@@ -41,7 +41,7 @@ pub enum EncodedFixedStrError {
     InvalidAscii(String),
     /// Errors related to [`fixedstr::zstr`].
     #[error("Fixed string error: {0}")]
-    ZStrError(String),
+    FixedStrError(String),
 }
 
 /// Error type for [`Movie`] parsing errors.
