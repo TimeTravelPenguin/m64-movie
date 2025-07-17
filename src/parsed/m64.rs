@@ -27,6 +27,7 @@ impl From<ExtendedFlags> for raw::ExtendedFlags {
     }
 }
 
+/// Extended data for Mupen64 movies.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum ExtendedData {
     ExtendedDataV0,
