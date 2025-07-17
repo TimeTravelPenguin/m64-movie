@@ -24,10 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - tidied up exports
 - updated README
 - updated docstrings
-- updated docstrings
-- corrected links
-- [**breaking**] improved public lib api
-- reordered code
 - [**breaking**] moved `impl`s into respective modules
 - [**breaking**] moved `m64::ControllerButton` to `movie::ControllerButton`
 - [**breaking**] moved `m64::Movie` to `raw::m64:RawMovie`
@@ -36,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- *(docs)* corrected incorrect docs
+- _(docs)_ corrected incorrect docs
 
 ## [0.3.0](https://github.com/TimeTravelPenguin/m64-movie/compare/v0.2.1...v0.3.0) - 2025-07-14
 
